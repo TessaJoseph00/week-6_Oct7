@@ -1,12 +1,25 @@
-# your code here ...
-
-# apputil.py
+"""# apputil.py
 from genius_api import genius
 import pandas as pd
 import requests
 import os
 
-ACCESS_TOKEN = os.environ['ACCESS_TOKEN']
+ACCESS_TOKEN = os.environ['ACCESS_TOKEN']"""
+
+from genius_api import genius
+import pandas as pd
+import requests
+import os
+from dotenv import load_dotenv
+
+# Load local .env file (only if present)
+load_dotenv()
+
+# Get the access token safely
+ACCESS_TOKEN = os.getenv('ACCESS_TOKEN')
+
+if ACCESS_TOKEN is None:
+    print("Warning: ACCESS_TOKEN not found. API calls will fail if running locally.")
 
 class Genius:
     def __init__(self, access_token=ACCESS_TOKEN):
