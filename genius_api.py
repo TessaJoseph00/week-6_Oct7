@@ -13,7 +13,9 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # constants
-ACCESS_TOKEN = os.environ['ACCESS_TOKEN']
+ACCESS_TOKEN = os.environ.get('ACCESS_TOKEN')
+if ACCESS_TOKEN is None:
+    raise RuntimeError("ACCESS_TOKEN environment variable not set. Please set ACCESS_TOKEN in your environment or .env file.")
 NAME_DEMO = __name__
 
 def genius(search_term, per_page=15):
