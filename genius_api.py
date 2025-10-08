@@ -13,9 +13,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # constants
-ACCESS_TOKEN = os.environ.get('ACCESS_TOKEN')
-if ACCESS_TOKEN is None:
-    raise RuntimeError("ACCESS_TOKEN environment variable not set. Please set ACCESS_TOKEN in your environment or .env file.")
+ACCESS_TOKEN = os.environ.get('ACCESS_TOKEN', '')
 NAME_DEMO = __name__
 
 def genius(search_term, per_page=15):
@@ -36,12 +34,13 @@ def genius(search_term, per_page=15):
     list
         All the hits which match the search criteria.
     """
+    if not ACCESS_TOKEN:
+        print("Warning: ACCESS_TOKEN environment variable not set. Returning empty result.")
+        return []
     genius_search_url = f"http://api.genius.com/search?q={search_term}&" + \
                         f"access_token={ACCESS_TOKEN}&per_page={per_page}"
-    
     response = requests.get(genius_search_url)
     json_data = response.json()
-    
     return json_data['response']['hits']
 
 def genius_to_df(search_term, n_results_per_term=10, 
