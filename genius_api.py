@@ -40,8 +40,18 @@ def genius(search_term, per_page=15):
     genius_search_url = f"http://api.genius.com/search?q={search_term}&" + \
                         f"access_token={ACCESS_TOKEN}&per_page={per_page}"
     response = requests.get(genius_search_url)
+    
+    if response.status_code != 200:
+        print(f"Error: {response.status_code} for {search_term}")
+        return []
+    
     json_data = response.json()
+    
+    if not json_data or 'response' not in json_data or 'hits' not in json_data['response']:
+        return []
+    
     return json_data['response']['hits']
+
 
 def genius_to_df(search_term, n_results_per_term=10, 
                  verbose=True, savepath=None):
@@ -61,29 +71,36 @@ def genius_to_df(search_term, n_results_per_term=10,
         The final DataFrame containing the results. 
     """
     json_data = genius(search_term, per_page=n_results_per_term)
+    if not json_data:
+        if verbose:
+            print(f'PID: {os.getpid()} ... search_term:', search_term)
+            print(f"No data gathered for {search_term}.")
+        return pd.DataFrame()
     hits = [hit['result'] for hit in json_data]
+    if not hits:
+        if verbose:
+            print(f'PID: {os.getpid()} ... search_term:', search_term)
+            print(f"No data gathered for {search_term}.")
+        return pd.DataFrame()
     df = pd.DataFrame(hits)
 
     # expand dictionary elements
-    df_stats = df['stats'].apply(pd.Series)
-    df_stats.rename(columns={c:'stat_' + c for c in df_stats.columns},
-                    inplace=True)
-    
-    df_primary = df['primary_artist'].apply(pd.Series)
-    df_primary.rename(columns={c:'primary_artist_' + c 
-                               for c in df_primary.columns},
-                      inplace=True)
-    
-    df = pd.concat((df, df_stats, df_primary), axis=1)
-    
+    if 'stats' in df.columns:
+        df_stats = df['stats'].apply(pd.Series)
+        df_stats.rename(columns={c:'stat_' + c for c in df_stats.columns}, inplace=True)
+        df = pd.concat((df, df_stats), axis=1)
+    if 'primary_artist' in df.columns:
+        df_primary = df['primary_artist'].apply(pd.Series)
+        df_primary.rename(columns={c:'primary_artist_' + c for c in df_primary.columns}, inplace=True)
+        df = pd.concat((df, df_primary), axis=1)
+
     if verbose:
         print(f'PID: {os.getpid()} ... search_term:', search_term)
         print(f"Data gathered for {search_term}.")
 
     # this is a good practice for numerous automated data pulls ...
     if savepath:
-        df.to_csv(savepath + '/genius-{searchname}.csv', 
-                  index=False)
+        df.to_csv(savepath + '/genius-{searchname}.csv', index=False)
 
     return df
 
@@ -105,15 +122,31 @@ def genius_to_dfs(search_terms, **kwargs):
     """
 
     dfs = []
-
     # loop through search_terms in question
     for search_term in tqdm(search_terms):
         df = genius_to_df(search_term, **kwargs)
-        
-        # add to list of DataFrames
-        dfs.append(df)
-
-    return pd.concat(dfs)
+        if not df.empty:
+            dfs.append(df)
+    if dfs:
+        return pd.concat(dfs)
+    else:
+        return pd.DataFrame()
+def get_artists(artist_names, n_results_per_term=10):
+    """
+    Return a DataFrame with artist information for one or more artists.
+    """
+    if not isinstance(artist_names, list):
+        artist_names = [artist_names]
+    
+    df = genius_to_dfs(artist_names, n_results_per_term=n_results_per_term, verbose=False)
+    
+    # Return empty DataFrame if no data
+    if df.empty:
+        return pd.DataFrame(columns=["primary_artist_name", "primary_artist_id", "primary_artist_url"])
+    
+    # Select only relevant artist columns
+    cols = [c for c in ["primary_artist_name", "primary_artist_id", "primary_artist_url"] if c in df.columns]
+    return df[cols].drop_duplicates()    
 
 def testing():
     print('Testing 1, 2, 3 ...')
