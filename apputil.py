@@ -11,14 +11,12 @@ ACCESS_TOKEN = os.getenv('ACCESS_TOKEN')
 if not ACCESS_TOKEN:
     print("Warning: ACCESS_TOKEN not found. Using mock data for autograder.")
 
-# -------------------------
-# Genius class wrapper
-# -------------------------
 class Genius:
     def __init__(self, access_token=ACCESS_TOKEN):
         self.access_token = access_token
 
     def get_artist(self, search_term):
+       
         if not self.access_token:
             return {"response": {"artist": {"name": search_term, "id": 12345, "followers_count": 1000}}}
 
