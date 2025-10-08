@@ -12,15 +12,10 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# -------------------------
-# constants
-# -------------------------
 ACCESS_TOKEN = os.environ.get('ACCESS_TOKEN', '')
 NAME_DEMO = __name__
 
-# -------------------------
 # genius function
-# -------------------------
 def genius(search_term, per_page=15):
     if not ACCESS_TOKEN:
         print("Warning: ACCESS_TOKEN not set. Returning empty result.")  
@@ -40,9 +35,7 @@ def genius(search_term, per_page=15):
 
     return json_data['response']['hits']
 
-# -------------------------
 # genius_to_df
-# -------------------------
 def genius_to_df(search_term, n_results_per_term=10, verbose=True, savepath=None):
     json_data = genius(search_term, per_page=n_results_per_term)
     if not json_data:
@@ -57,7 +50,7 @@ def genius_to_df(search_term, n_results_per_term=10, verbose=True, savepath=None
 
     df = pd.DataFrame(hits)
 
-    # Expand nested dicts
+    # Expanded nested dicts
     if 'stats' in df.columns:
         df_stats = df['stats'].apply(pd.Series)
         df_stats.rename(columns={c: 'stat_' + c for c in df_stats.columns}, inplace=True)
@@ -73,9 +66,7 @@ def genius_to_df(search_term, n_results_per_term=10, verbose=True, savepath=None
 
     return df
 
-# -------------------------
 # genius_to_dfs
-# -------------------------
 def genius_to_dfs(search_terms, **kwargs):
     dfs = []
     for term in tqdm(search_terms):
@@ -87,9 +78,7 @@ def genius_to_dfs(search_terms, **kwargs):
     else:
         return pd.DataFrame() 
 
-# -------------------------
 # get_artists function
-# -------------------------
 def get_artists(artist_names, n_results_per_term=10):
     if not isinstance(artist_names, list):
         artist_names = [artist_names]

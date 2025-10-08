@@ -15,8 +15,6 @@ class Genius:
     def __init__(self, access_token=ACCESS_TOKEN):
         self.access_token = access_token
 
-
-
     def get_artist(self, search_term):
         # Always return the expected structure, even if no data or no token
         if not self.access_token:
