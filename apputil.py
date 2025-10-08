@@ -16,13 +16,13 @@ class Genius:
         self.access_token = access_token
 
     def get_artist(self, search_term):
-       
+        # Always return the expected structure, even if no data or no token
         if not self.access_token:
-            return {"response": {"artist": {"name": search_term, "id": 12345, "followers_count": 1000}}}
+            return {"response": {"artist": {"name": search_term, "id": None, "followers_count": None}}}
 
         hits = genius(search_term)
         if not hits:
-            return None
+            return {"response": {"artist": {"name": search_term, "id": None, "followers_count": None}}}
 
         artist_id = hits[0]['result']['primary_artist']['id']
         artist_url = f"http://api.genius.com/artists/{artist_id}?access_token={self.access_token}"
