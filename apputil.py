@@ -1,25 +1,18 @@
-"""# apputil.py
-from genius_api import genius
-import pandas as pd
-import requests
-import os
 
-ACCESS_TOKEN = os.environ['ACCESS_TOKEN']"""
-
-from genius_api import genius
+from genius_api import genius, genius_to_df, genius_to_dfs, get_artists
 import pandas as pd
 import requests
 import os
 from dotenv import load_dotenv
 
-# Load local .env file (only if present)
+# Load local .env file
 load_dotenv()
 
 # Get the access token safely
 ACCESS_TOKEN = os.getenv('ACCESS_TOKEN')
-
 if ACCESS_TOKEN is None:
     print("Warning: ACCESS_TOKEN not found. API calls will fail if running locally.")
+
 
 class Genius:
     def __init__(self, access_token=ACCESS_TOKEN):
@@ -27,28 +20,13 @@ class Genius:
 
     def get_artist(self, search_term):
         """
-        Retrieve full artist information from Genius for a given search term.
-
-        This method searches for the artist name using the Genius API, extracts 
-        the primary artist ID from the first search hit, and returns the detailed
-        artist information as a JSON dictionary.
-
-        Args:
-            search_term (str): The name of the artist to search for.
-
-        Returns:
-            dict: A dictionary containing the artist's information as returned 
-                by the Genius API. Returns None if no artist is found.
+        Get full artist information from Genius for a single artist.
         """
-
         hits = genius(search_term)
         if not hits:
             return None
 
-        # 2. Extract the primary artist ID from the first hit
         artist_id = hits[0]['result']['primary_artist']['id']
-
-        # 3. Get artist info using /artists/{id}
         artist_url = f"http://api.genius.com/artists/{artist_id}?access_token={self.access_token}"
         response = requests.get(artist_url)
         response.raise_for_status()
@@ -56,24 +34,7 @@ class Genius:
 
     def get_artists(self, search_terms):
         """
-        Retrieve artist information for a list of search terms as a DataFrame.
-
-        This method iterates over each search term, calls `get_artist` to fetch
-        detailed information for the most likely (primary) artist, and constructs
-        a pandas DataFrame containing the following columns:
-            - search_term: the original search term
-            - artist_name: the artist's name from Genius
-            - artist_id: the Genius Artist ID
-            - followers_count: the number of followers (if available)
-
-        Args:
-            search_terms (list of str): List of artist names to search for.
-
-        Returns:
-            pandas.DataFrame: A DataFrame where each row corresponds to a search
-            term and contains the artist information. If no artist is found for
-            a search term, the row will contain None values.
-
+        Get artist information for multiple artists as DataFrame.
         """
         rows = []
         for term in search_terms:
@@ -99,6 +60,5 @@ class Genius:
 if __name__ == "__main__":
     genius_obj = Genius()
     print(genius_obj.access_token)
-    print(genius_obj.get_artist("Radiohead")["response"]["artist"]["name"])
+    print(genius_obj.get_artist("Radiohead")["response"]["artist"]["name"] if ACCESS_TOKEN else "No token")
     print(genius_obj.get_artists(['Rihanna', 'Tycho', 'Seal', 'U2']))
-
